@@ -88,28 +88,29 @@ class ConfigLoader:
         return self.branch_data.get(branch_name, {})
 
     @property
-    def all_databases(self) -> list:
-        """Dynamically aggregates all unique databases from every single branch 
-        and project target block configured within project_config.yml."""
-        dbs = set()
-    
-    # Iterate through all configured blocks under branch_data dynamically
-        for branch_name, branch in self.branch_data.items():
-            if isinstance(branch, dict):
-                 for db in branch.get("sf_databases", []):
-                     dbs.add(db.upper())
-                
-        return sorted(list(dbs))
+    def all_databases(self):
+    databases = []
+    for branch_name, branch in self.branch_data.items():
+        if not branch:
+            continue
+        for db in branch.get("sf_databases", []):
+            if db not in databases:
+                databases.append(db)
+    return databases
 
     @property
     def all_schemas(self):
         """All unique schemas across all branches."""
         schemas = []
         for branch_name, branch in self.branch_data.items():
-            for schema in branch.get("sf_schemas", []):
-                if schema not in schemas:
-                    schemas.append(schema)
-        return schemas
+        # Defensive check for empty/unparsed branch configuration blocks
+        if not branch:
+            continue
+            
+        for schema in branch.get("sf_schemas", []):
+            if schema not in schemas:
+                schemas.append(schema)
+    return schemas
 
     @property
     def environments(self):
