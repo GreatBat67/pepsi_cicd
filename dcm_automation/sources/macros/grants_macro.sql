@@ -21,10 +21,6 @@ GRANT CREATE TABLE ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 GRANT CREATE TASK ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 GRANT CREATE VIEW ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 
-GRANT SELECT ON ALL TABLES IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON FUTURE TABLES IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON ALL VIEWS IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON FUTURE VIEWS IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 
 {% endfor %}
 
@@ -49,10 +45,6 @@ GRANT CREATE TABLE ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 GRANT CREATE TASK ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 GRANT CREATE VIEW ON SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 
-GRANT SELECT ON ALL TABLES IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON FUTURE TABLES IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON ALL VIEWS IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
-GRANT SELECT ON FUTURE VIEWS IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 
 {% endfor %}
 
@@ -62,9 +54,7 @@ GRANT SELECT ON FUTURE VIEWS IN SCHEMA {{ full_schema }} TO ROLE {{ env_role }};
 {% for i in range(role_values|length - 1) %}
 GRANT ROLE {{ role_values[i] }} TO ROLE {{ role_values[i + 1] }};
 {% endfor %}
-{% if role_values[-1] != project_owner_role %}
+{% endif %}
 GRANT ROLE {{ role_values[-1] }} TO ROLE {{ project_owner_role }};
-{% endif %}
-{% endif %}
 
 {% endmacro %}

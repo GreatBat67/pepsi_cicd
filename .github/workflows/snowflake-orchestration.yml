@@ -59,13 +59,14 @@ jobs:
             const token = await core.getIDToken('snowflakecomputing.com')
             core.exportVariable('SNOWFLAKE_TOKEN', token)
 
-      # PRE-STEP: CLEAN STALE/DUPLICATE DCM DEFINITION SQL FILES
-      - name: "Purge Stale DCM Definitions"
+      # PRE-STEP: DO NOT PURGE DEFINITIONS
+      # Removing definition files causes DCM to plan DROPs for existing objects.
+      # dcm_files.py already skips files that exist (SKIPPED message), so
+      # re-running it is safe and additive — only NEW objects get new files.
+      - name: "Verify DCM Definitions Directory Exists"
         run: |
-          echo "🧹 Cleaning existing DCM definition SQL files to prevent conflicting object errors..."
-          if [ -d "dcm_automation/sources/definitions" ]; then
-            find dcm_automation/sources/definitions -type f -name "*.sql" -delete
-          fi
+          mkdir -p dcm_automation/sources/definitions
+          echo "✔ Definitions directory ready (existing files preserved)."
 
       # STEP 1: RUN PYTHON ORCHESTRATION PIPELINE
       - name: "Execute Custom Python Automation Orchestrator Pipeline"
