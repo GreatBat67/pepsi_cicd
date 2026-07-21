@@ -19,6 +19,7 @@ LOGS_DIR = cfg.LOGS_DIR
 # ============================================================
 BRANCH_DATA = config.branch_data
 ADMIN_ROLE = config.admin_role.upper()
+DCM_PROJECT_NAME = config.dcm_project_name.upper() if hasattr(config, 'dcm_project_name') else "DCM_AUTOMATION"
 
 # Find the branch where is_default_target is true (to act as the metadata hub)
 target_config = {}
@@ -55,21 +56,20 @@ sql.append(f"CREATE SCHEMA IF NOT EXISTS {metadata_db}.{metadata_schema};")
 sql.append(f"USE SCHEMA {metadata_db}.{metadata_schema};")
 sql.append("")
 
-# Loop through all branches to create their specific DCM targets
+# Loop through all branches to create their specific DCM projects
 for branch_name, branch_cfg in BRANCH_DATA.items():
     if not isinstance(branch_cfg, dict):
         continue
 
-    dcm_target = branch_cfg.get("dcm_target")
-    
-    # Skip if the branch doesn't have a target or is the metadata branch itself
-    if not dcm_target or branch_cfg.get("is_default_target", False):
+    # Skip the metadata branch itself (is_default_target)
+    if branch_cfg.get("is_default_target", False):
         continue
 
-    dcm_target_upper = dcm_target.upper()
+    env_suffix = branch_name.upper()
+    project_name = f"{DCM_PROJECT_NAME}_{env_suffix}"
 
-    sql.append(f"-- Project for {branch_name.upper()} environment")
-    sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {metadata_db}.{metadata_schema}.{dcm_target_upper};")
+    sql.append(f"-- Project for {env_suffix} environment")
+    sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {metadata_db}.{metadata_schema}.{project_name};")
     sql.append("")
 
 # ============================================================

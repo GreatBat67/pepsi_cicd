@@ -1,3 +1,4 @@
+
 from pathlib import Path
 import sys
 import yaml
@@ -73,8 +74,7 @@ for branch_name, branch_cfg in BRANCH_DATA.items():
                 mapped_roles[base_role] = sf_role
                 break
                 
-    # Manually append the Admin role suffix mapping requested
-    mapped_roles[ADMIN_ROLE] = f"{ADMIN_ROLE}{env_suffix.upper()}"
+    # Admin role is referenced via project_owner_role in templates, no env-suffix mapping needed
     
     # Set dev as the default target configuration
     is_default = (environment == "dev")

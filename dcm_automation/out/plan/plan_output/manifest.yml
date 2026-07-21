@@ -40,7 +40,6 @@ templating:
       roles:
         DBA_ADMIN: DBA_ADMIN_CICD
         DBA_FR: DBA_FR_CICD
-        PSEUDO_ACCOUNTADMIN: PSEUDO_ACCOUNTADMIN_CICD
       is_default_target: false
     dev:
       environment: dev
@@ -55,7 +54,6 @@ templating:
       roles:
         DBA_ADMIN: DBA_ADMIN_DEV
         DBA_FR: DBA_FR_DEV
-        PSEUDO_ACCOUNTADMIN: PSEUDO_ACCOUNTADMIN_DEV
       is_default_target: true
     qa:
       environment: qa
@@ -70,7 +68,6 @@ templating:
       roles:
         DBA_ADMIN: DBA_ADMIN_QA
         DBA_FR: DBA_FR_QA
-        PSEUDO_ACCOUNTADMIN: PSEUDO_ACCOUNTADMIN_QA
       is_default_target: false
     main:
       environment: main
@@ -85,5 +82,4 @@ templating:
       roles:
         DBA_ADMIN: DBA_ADMIN_MAIN
         DBA_FR: DBA_FR_MAIN
-        PSEUDO_ACCOUNTADMIN: PSEUDO_ACCOUNTADMIN_MAIN
       is_default_target: false
