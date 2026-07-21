@@ -103,14 +103,13 @@ class ConfigLoader:
         """All unique schemas across all branches."""
         schemas = []
         for branch_name, branch in self.branch_data.items():
-        # Defensive check for empty/unparsed branch configuration blocks
-        if not branch:
-            continue
+            if not branch:
+                continue
             
-        for schema in branch.get("sf_schemas", []):
-            if schema not in schemas:
+            for schema in branch.get("sf_schemas", []):
+             if schema not in schemas:
                 schemas.append(schema)
-    return schemas
+        return schemas
 
     @property
     def environments(self):
