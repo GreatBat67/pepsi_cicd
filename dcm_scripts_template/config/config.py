@@ -89,14 +89,14 @@ class ConfigLoader:
 
     @property
     def all_databases(self):
-    databases = []
-    for branch_name, branch in self.branch_data.items():
-        if not branch:
-            continue
-        for db in branch.get("sf_databases", []):
-            if db not in databases:
-                databases.append(db)
-    return databases
+        databases = []
+        for branch_name, branch in self.branch_data.items():
+            if not branch:
+                continue
+            for db in branch.get("sf_databases", []):
+                if db not in databases:
+                    databases.append(db)
+        return databases
 
     @property
     def all_schemas(self):
