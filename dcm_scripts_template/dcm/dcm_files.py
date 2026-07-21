@@ -1,5 +1,3 @@
-# DCM definition file generator — produces DEFINE statements from DEV objects
-# Co-authored with CoCo
 from snowflake.snowpark.context import get_active_session
 from pathlib import Path
 import sys

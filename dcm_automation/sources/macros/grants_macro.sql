@@ -3,7 +3,7 @@
   -- Dynamic Role References from Configuration Map
   {% set dba_admin_role = roles['DBA_ADMIN'] %}
   {% set dba_fr_role = roles['DBA_FR'] %}
-  {% set accountadmin_role = roles['PSEUDO_ACCOUNTADMIN'] if 'PSEUDO_ACCOUNTADMIN' in roles else project_owner_role %}
+  {% set accountadmin_role = project_owner_role %}
 
   -- Grants for logical role: DBA_ADMIN
   GRANT USAGE ON DATABASE {{ database }} TO ROLE {{ dba_admin_role }};

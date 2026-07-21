@@ -84,8 +84,15 @@ sql.append("-- CREATE ROLES")
 sql.append("-- ====================================================")
 sql.append("")
 
-for role in ROLES:
+# 1. Collect all unique roles across all branches
+all_roles_to_create = set()
+for branch_name, branch_info in BRANCH_DATA.items():
+    if isinstance(branch_info, dict):
+        for role in branch_info.get("sf_roles", []):
+            all_roles_to_create.add(role)
 
+# 2. Generate CREATE statements for all collected roles
+for role in sorted(list(all_roles_to_create)):
     sql.append(f"CREATE ROLE IF NOT EXISTS {role};")
 
     if role.upper() != ADMIN_ROLE.upper():
@@ -126,7 +133,11 @@ for branch_name, branch in BRANCH_DATA.items():
 
     for role in branch_roles:
 
-        policy = ROLES.get(role, {})
+        policy = {}
+        for base_role, base_policy in ROLES.items():
+            if role.upper().startswith(base_role.upper()):
+                policy = base_policy
+                break
 
         for db_name in databases:
 
