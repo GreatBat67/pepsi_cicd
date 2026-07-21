@@ -1,0 +1,9 @@
+-- ====================================================
+-- CREATE DCM PROJECTS
+-- ====================================================
+
+USE ROLE PSEUDO_ACCOUNTADMIN;
+
+USE DATABASE CICD_METADATA;
+USE SCHEMA CICD_METADATA.DCM_CONFIG;
+CREATE DCM PROJECT IF NOT EXISTS CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION;

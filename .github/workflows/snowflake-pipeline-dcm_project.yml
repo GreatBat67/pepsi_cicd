@@ -1,0 +1,51 @@
+name: "Snowflake Component: Progression Target - dcm_project"
+on:
+  workflow_call:
+    inputs:
+      action_type:
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  SNOWFLAKE_ACCOUNT: "KIPI-KIPI_PRIMARY"
+  SNOWFLAKE_USER: "github_pepsi_project_user"
+  SNOWFLAKE_ROLE: "PSEUDO_ACCOUNTADMIN"
+  SNOWFLAKE_WAREHOUSE: "github_cicd_demo_wh"
+  SNOWFLAKE_CLI_FEATURES_ENABLE_SNOWFLAKE_PROJECTS: "true"
+  SNOWFLAKE_DATABASE: "CICD_METADATA"
+  SNOWFLAKE_SCHEMA: "DCM_CONFIG"
+
+jobs:
+  dcm_project-environment-execution:
+    runs-on: ubuntu-latest
+    environment: dcm_project 
+    steps:
+      - uses: actions/checkout@v4
+      
+      - if: inputs.action_type == 'plan'
+        name: Execute Dry-Run Mappings
+        run: echo "Executing Dry-Run Infrastructure Validation for tier [dcm_project]"
+
+      - name: Run Modular Infrastructure Verification (DCM Plan)
+        uses: ./.github/workflows/modules/action-dcm-engine
+        with:
+          dcm_dir: "dcm_automation"
+          dcm_target: "DCM_METADATA"
+          action_type: "plan"
+
+
+      - if: inputs.action_type == 'deploy'
+        name: Execute Live Infrastructure Deployment
+        run: echo "Executing Live Production Deployment for tier [dcm_project]"
+
+      - name: Live Deploy to Database Target (DCM Deploy)
+        uses: ./.github/workflows/modules/action-dcm-engine
+        with:
+          dcm_dir: "dcm_automation"
+          dcm_target: "DCM_METADATA"
+          action_type: "deploy"
+
