@@ -19,7 +19,6 @@ LOGS_DIR = cfg.LOGS_DIR
 # ============================================================
 BRANCH_DATA = config.branch_data
 ADMIN_ROLE = config.admin_role.upper()
-DCM_PROJECT_NAME = config.dcm_project_name.upper() if hasattr(config, 'dcm_project_name') else "DCM_AUTOMATION"
 
 # Find the branch where is_default_target is true (to act as the metadata hub)
 target_config = {}
@@ -31,10 +30,16 @@ for branch_name, branch_cfg in BRANCH_DATA.items():
 if not target_config:
     raise RuntimeError("No branch with is_default_target: true found in project_config.yml")
 
-# Hardcoding the schema as requested, pulling the DB from the config (CICD_METADATA)
-sf_databases = target_config.get("sf_databases", ["CICD_METADATA"])
-metadata_db = sf_databases[0].upper() if sf_databases else "CICD_METADATA"
-metadata_schema = "DCM_CONFIG"
+# ============================================================
+# DYNAMIC VARIABLES (No hardcoding)
+# ============================================================
+sf_databases = target_config.get("sf_databases", [])
+if not sf_databases:
+    raise RuntimeError("sf_databases must be defined for the metadata target in project_config.yml.")
+
+metadata_db = sf_databases[0].upper()
+# Uses "DCM_CONFIG" as a safe fallback just in case it isn't explicitly defined in YAML
+metadata_schema = target_config.get("dcm_schema", "DCM_CONFIG").upper()
 
 OUTPUT_FILE = LOGS_DIR / "create_dcm_projects.sql"
 
@@ -56,20 +61,30 @@ sql.append(f"CREATE SCHEMA IF NOT EXISTS {metadata_db}.{metadata_schema};")
 sql.append(f"USE SCHEMA {metadata_db}.{metadata_schema};")
 sql.append("")
 
-# Loop through all branches to create their specific DCM projects
+# Loop through all branches to create their specific DCM targets
 for branch_name, branch_cfg in BRANCH_DATA.items():
     if not isinstance(branch_cfg, dict):
         continue
 
-    # Skip the metadata branch itself (is_default_target)
-    if branch_cfg.get("is_default_target", False):
-        continue
+    dcm_target = branch_cfg.get("dcm_target")
+    dcm_dir = branch_cfg.get("dcm_dir")
+    project_name_from_cfg = branch_cfg.get("project_name")
 
-    env_suffix = branch_name.upper()
-    project_name = f"{DCM_PROJECT_NAME}_{env_suffix}"
-
-    sql.append(f"-- Project for {env_suffix} environment")
-    sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {metadata_db}.{metadata_schema}.{project_name};")
+    sql.append(f"-- Project for {branch_name.upper()} environment")
+    
+    # 1. HIGHEST PRIORITY: If project_name is explicitly defined in YAML, use it exactly
+    if project_name_from_cfg:
+        sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {project_name_from_cfg};")
+        
+    # 2. ALL ENVIRONMENTS (Including metadata hub): Construct using dcm_dir + branch_name
+    elif dcm_dir:
+        project_name = f"{dcm_dir.upper()}_{branch_name.upper()}"
+        sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {metadata_db}.{metadata_schema}.{project_name};")
+        
+    # 3. Fallback behavior if dcm_dir is missing
+    elif dcm_target:
+        sql.append(f"CREATE DCM PROJECT IF NOT EXISTS {metadata_db}.{metadata_schema}.{dcm_target.upper()};")
+    
     sql.append("")
 
 # ============================================================

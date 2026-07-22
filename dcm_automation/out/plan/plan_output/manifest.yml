@@ -1,6 +1,6 @@
 manifest_version: 2
 type: DCM_PROJECT
-default_target: PEPSI_DCM_DEV
+default_target: DCM_METADATA
 targets:
   PEPSI_DCM_CICD:
     account_identifier: KIPI-KIPI_PRIMARY
@@ -22,6 +22,11 @@ targets:
     project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_MAIN
     project_owner: PSEUDO_ACCOUNTADMIN
     templating_config: main
+  DCM_METADATA:
+    account_identifier: KIPI-KIPI_PRIMARY
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DCM_PROJECT
+    project_owner: PSEUDO_ACCOUNTADMIN
+    templating_config: dcm_project
 templating:
   defaults:
     project_owner_role: PSEUDO_ACCOUNTADMIN
@@ -54,7 +59,7 @@ templating:
       roles:
         DBA_ADMIN: DBA_ADMIN_DEV
         DBA_FR: DBA_FR_DEV
-      is_default_target: true
+      is_default_target: false
     qa:
       environment: qa
       env_suffix: _qa
@@ -83,3 +88,17 @@ templating:
         DBA_ADMIN: DBA_ADMIN_MAIN
         DBA_FR: DBA_FR_MAIN
       is_default_target: false
+    dcm_project:
+      environment: dcm_project
+      env_suffix: _dcm_project
+      database: CICD_METADATA
+      schemas:
+      - UTILITIES
+      - PATIENTS
+      - MANAGEMENT
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DCM_PROJECT
+      project_owner: PSEUDO_ACCOUNTADMIN
+      roles:
+        DBA_ADMIN: DBA_ADMIN
+        DBA_FR: DBA_FR
+      is_default_target: true

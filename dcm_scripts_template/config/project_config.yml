@@ -63,6 +63,7 @@ branch_data:
     approvers: []
     dcm_dir: dcm_automation
     dcm_target: DCM_METADATA
+    dcm_schema: DCM_CONFIG
     is_default: true
     is_default_target: true
     is_default_true: true
@@ -70,6 +71,7 @@ branch_data:
     required_approvals: 0
     sf_databases:
       - CICD_METADATA
+    sf_schemas: *id001
     sf_roles:
       - DBA_ADMIN
       - DBA_FR
