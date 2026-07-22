@@ -447,7 +447,7 @@ def build_full_config_structure(
             "source_branch": secrets.get("source_branch", "dcm_template_v1"),
             "files_to_copy": ["requirements.txt", "snowflake.toml"],
             "folders_to_copy": [
-                "Projects", "dcm_scripts_template",
+                "Projects", "initialization_template",
                 "helper_scripts"
             ]
         },
