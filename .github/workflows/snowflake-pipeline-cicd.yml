@@ -27,22 +27,15 @@ jobs:
       - uses: actions/checkout@v4
       
       - if: inputs.action_type == 'plan'
-        name: Execute Dry-Run Mappings
-        run: echo "Executing Dry-Run Infrastructure Validation for tier [cicd]"
-
-      - name: Run Modular Infrastructure Verification (DCM Plan)
+        name: "DCM Plan — Dry-run against CICD target only"
         uses: ./.github/workflows/modules/action-dcm-engine
         with:
           dcm_dir: "dcm_automation"
           dcm_target: "PEPSI_DCM_CICD"
           action_type: "plan"
 
-
       - if: inputs.action_type == 'deploy'
-        name: Execute Live Infrastructure Deployment
-        run: echo "Executing Live Production Deployment for tier [cicd]"
-
-      - name: Live Deploy to Database Target (DCM Deploy)
+        name: "DCM Deploy — Apply changes to CICD target only"
         uses: ./.github/workflows/modules/action-dcm-engine
         with:
           dcm_dir: "dcm_automation"

@@ -1,4 +1,3 @@
-
 from snowflake.snowpark.context import get_active_session
 from pathlib import Path
 import sys

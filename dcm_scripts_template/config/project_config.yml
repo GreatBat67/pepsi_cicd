@@ -1,38 +1,22 @@
 branch_data:
   cicd:
     approvers:
-    - GreatBat67
+      - GreatBat67
     dcm_dir: dcm_automation
     dcm_target: PEPSI_DCM_CICD
     require_pr: true
     required_approvals: 1
     sf_databases:
-    - PEPSI_DEVOPS_DB_CICD
+      - PEPSI_DEVOPS_DB_CICD
     sf_roles:
-    - DBA_ADMIN
-    - DBA_FR
+      - DBA_ADMIN_CICD
+      - DBA_FR_CICD
     sf_schemas: &id001
-    - UTILITIES
-    - PATIENTS
-    - MANAGEMENT
+      - UTILITIES
+      - PATIENTS
+      - MANAGEMENT
     sf_user: github_pepsi_cicd_user
-  dcm_project:
-    approvers: []
-    dcm_dir: dcm_automation
-    dcm_target: DCM_METADATA
-    is_default: true
-    is_default_target: true
-    is_default_true: true
-    require_pr: false
-    required_approvals: 0
-    sf_databases:
-    - CICD_METADATA
-    sf_roles:
-    - DBA_ADMIN
-    - DBA_FR
-    sf_schemas:
-    - DCM_CONFIG
-    sf_user: github_pepsi_project_user
+
   dev:
     approvers: []
     dcm_dir: dcm_automation
@@ -40,40 +24,58 @@ branch_data:
     require_pr: false
     required_approvals: 0
     sf_databases:
-    - PEPSI_DEVOPS_DB_DEV
+      - PEPSI_DEVOPS_DB_DEV
     sf_roles:
-    - DBA_ADMIN
-    - DBA_FR
+      - DBA_ADMIN_DEV
+      - DBA_FR_DEV
     sf_schemas: *id001
-    sf_user: github_pepsi_dev_user
-  main:
-    approvers:
-    - GreatBat67
-    dcm_dir: dcm_automation
-    dcm_target: PEPSI_DCM_MAIN
-    require_pr: true
-    required_approvals: 1
-    sf_databases:
-    - PEPSI_DEVOPS_DB_MAIN
-    sf_roles:
-    - DBA_ADMIN
-    - DBA_FR
-    sf_schemas: *id001
-    sf_user: github_pepsi_main_user
+    sf_user: github_pepsi_cicd_user
+
   qa:
-    approvers:
-    - GreatBat67
+    approvers: []
     dcm_dir: dcm_automation
     dcm_target: PEPSI_DCM_QA
-    require_pr: true
-    required_approvals: 1
+    require_pr: false
+    required_approvals: 0
     sf_databases:
-    - PEPSI_DEVOPS_DB_QA
+      - PEPSI_DEVOPS_DB_QA
     sf_roles:
-    - DBA_ADMIN
-    - DBA_FR
+      - DBA_ADMIN_QA
+      - DBA_FR_QA
     sf_schemas: *id001
-    sf_user: github_pepsi_qa_user
+    sf_user: github_pepsi_cicd_user
+
+  main:
+    approvers: []
+    dcm_dir: dcm_automation
+    dcm_target: PEPSI_DCM_MAIN
+    require_pr: false
+    required_approvals: 0
+    sf_databases:
+      - PEPSI_DEVOPS_DB_MAIN
+    sf_roles:
+      - DBA_ADMIN_MAIN
+      - DBA_FR_MAIN
+    sf_schemas: *id001
+    sf_user: github_pepsi_cicd_user
+
+  dcm_project:
+    approvers: []
+    dcm_dir: dcm_automation
+    dcm_target: DCM_METADATA
+    dcm_schema: DCM_CONFIG
+    is_default: true
+    is_default_target: true
+    is_default_true: true
+    require_pr: false
+    required_approvals: 0
+    sf_databases:
+      - CICD_METADATA
+    sf_schemas: *id001
+    sf_roles:
+      - DBA_ADMIN
+      - DBA_FR
+      
 branch_sequence:
 - dev
 - qa

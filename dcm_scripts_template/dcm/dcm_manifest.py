@@ -1,4 +1,3 @@
-# Generate DCM manifest.yml from branch-based config
 from pathlib import Path
 import sys
 import yaml
@@ -8,7 +7,6 @@ sys.dont_write_bytecode = True
 # ============================================================
 # LOAD CONFIGURATION
 # ============================================================
-
 ROOT = Path.cwd().parent
 
 if str(ROOT) not in sys.path:
@@ -26,163 +24,125 @@ LOGS_DIR = cfg.LOGS_DIR
 # ============================================================
 # YAML DUMPER
 # ============================================================
-
 class NoAliasDumper(yaml.SafeDumper):
     def ignore_aliases(self, data):
         return True
 
 # ============================================================
-# CONFIG
-# ============================================================
-
-BRANCH_DATA = config.branch_data
-ROLES = config.roles
-ACCOUNT_IDENTIFIER = config.account_identifier
-WAREHOUSE = config.warehouse
-ADMIN_ROLE = config.admin_role.upper()
-
-# ------------------------------------------------------------
-# DYNAMIC DEFAULT TARGET & PROJECT NAME RESOLUTION
-# ------------------------------------------------------------
-DEFAULT_TARGET = None
-DEFAULT_PROJECT_NAME = None
-
-for branch_name, branch_info in BRANCH_DATA.items():
-    # Check for various ways the flag might have been written in YAML
-    is_def = branch_info.get("is_default")
-    is_def_tgt = branch_info.get("is_default_target")
-    is_def_true = branch_info.get("is_default_true")
-    
-    # If any of these evaluate to true in the YAML, use this target as the master
-    if str(is_def).lower() == 'true' or str(is_def_tgt).lower() == 'true' or str(is_def_true).lower() == 'true':
-        DEFAULT_TARGET = branch_info.get("dcm_target")
-        
-        # Build the centralized project name based on this default branch (Metadata)
-        db = branch_info.get("sf_databases", [""])[0].upper()
-        schema = branch_info.get("sf_schemas", ["PUBLIC"])[0].upper()
-        dcm_dir = branch_info.get("dcm_dir", "DCM_AUTOMATION").upper()
-        DEFAULT_PROJECT_NAME = f"{db}.{schema}.{dcm_dir}"
-        
-        print(f"--> Found default target flag in branch: {branch_name}")
-        break
-
-# Fallback to the first available target if the flag wasn't found
-if not DEFAULT_TARGET:
-    print("--> WARNING: Default flag not found in YAML. Falling back to the first available branch.")
-    first_branch = next(iter(BRANCH_DATA.values()), {})
-    DEFAULT_TARGET = first_branch.get("dcm_target")
-    db = first_branch.get("sf_databases", [""])[0].upper()
-    schema = first_branch.get("sf_schemas", ["PUBLIC"])[0].upper()
-    dcm_dir = first_branch.get("dcm_dir", "DCM_AUTOMATION").upper()
-    DEFAULT_PROJECT_NAME = f"{db}.{schema}.{dcm_dir}"
-
-
-MANIFEST_VERSION = 2
-PROJECT_TYPE = "DCM_PROJECT"
-
-# ============================================================
 # BUILD MANIFEST
 # ============================================================
+BRANCH_DATA = config.branch_data
+ACCOUNT_IDENTIFIER = config.account_identifier
+ADMIN_ROLE = config.admin_role
+WAREHOUSE = config.warehouse
+if not config.dcm_project_name:
+    raise RuntimeError("dcm_project_name must be defined in project_config.yml")
+DCM_PROJECT_NAME = config.dcm_project_name.upper()
 
-def build_manifest():
+# 1. Find the target configuration (the metadata hub)
+target_config = {}
+for branch, cfg_data in BRANCH_DATA.items():
+    if isinstance(cfg_data, dict) and cfg_data.get("is_default_target", False):
+        target_config = cfg_data
+        break
 
-    targets = {}
-    configurations = {}
+if not target_config:
+    raise RuntimeError("No branch with is_default_target: true found in project_config.yml")
 
-    for branch_name, branch in BRANCH_DATA.items():
+# 2. Dynamically pull the database (e.g., CICD_METADATA)
+sf_databases = target_config.get("sf_databases", [])
+if not sf_databases:
+    raise RuntimeError("sf_databases must be defined for the metadata target in config.")
+metadata_db = sf_databases[0].upper()
 
-        databases = branch.get("sf_databases", [])
-        schemas = branch.get("sf_schemas", [])
-        dcm_target = branch.get("dcm_target")
-        branch_roles = branch.get("sf_roles", list(ROLES.keys()))
+# 3. Dynamically pull the schema (falls back to DCM_CONFIG if not explicitly set in YAML)
+metadata_schema = target_config.get("dcm_schema", "DCM_CONFIG").upper()
 
-        if not databases or not dcm_target:
-            continue
+targets = {}
+configurations = {}
+default_target = None
 
-        database = databases[0].upper()
+for branch_name, branch_cfg in BRANCH_DATA.items():
+    if not isinstance(branch_cfg, dict):
+        continue
 
-        # ENSURE THE PROJECT NAME IS IDENTICAL FOR ALL TARGETS AND CONFIGS
-        project_name = DEFAULT_PROJECT_NAME
-
-        targets[dcm_target] = {
-            "account_identifier": ACCOUNT_IDENTIFIER,
-            "project_name": project_name,  # <--- Project name safely kept inside Targets
-            "project_owner": ADMIN_ROLE,
-            "templating_config": branch_name,
-        }
-
-        # Convert roles to a dictionary so Jinja can look up roles by their logical name
-        if isinstance(branch_roles, dict):
-            roles_dict = {k.upper(): v.upper() for k, v in branch_roles.items()}
-        else:
-            roles_dict = {r.upper(): r.upper() for r in branch_roles}
-
-       # Check if this branch has the default target flag in your YAML
-        is_def = branch.get("is_default")
-        is_def_tgt = branch.get("is_default_target")
-        is_def_true = branch.get("is_default_true")
+    dcm_target = branch_cfg.get("dcm_target")
+    if not dcm_target:
+        continue
         
-        # Evaluates to True if any of them are 'true' in your YAML
-        is_this_default = str(is_def).lower() == 'true' or str(is_def_tgt).lower() == 'true' or str(is_def_true).lower() == 'true'
+    environment = branch_name
+    env_suffix = f"_{environment}"
+    
+    # Construct project_name like CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_CICD
+    project_name = f"{metadata_db}.{metadata_schema}.{DCM_PROJECT_NAME}_{environment.upper()}"
+    
+    database = branch_cfg.get("sf_databases", [""])[0] if branch_cfg.get("sf_databases") else ""
+    schemas = branch_cfg.get("sf_schemas", [])
+    
+    # Map roles (e.g., DBA_ADMIN -> DBA_ADMIN_CICD)
+    mapped_roles = {}
+    for base_role in config.roles.keys():
+        for sf_role in branch_cfg.get("sf_roles", []):
+            if sf_role.upper().startswith(base_role.upper()):
+                mapped_roles[base_role] = sf_role
+                break
+                
+    # Admin role is referenced via project_owner_role in templates, no env-suffix mapping needed
+    
+    # Use is_default_target flag from config to determine the default
+    is_default = branch_cfg.get("is_default_target", False)
+    if is_default:
+        default_target = dcm_target
 
-        configurations[branch_name] = {
-            "environment": branch_name,
-            "env_suffix": f"_{branch_name}",
-            "database": database,
-            "schemas": [s.upper() for s in schemas],
-            "project_name": project_name,
-            "project_owner": ADMIN_ROLE,
-            "roles": roles_dict,
-            # EXPORTS YOUR YAML FLAG directly to Jinja
-            "is_default_target": is_this_default, 
-        }
-
-    return {
-        "manifest_version": MANIFEST_VERSION,
-        "type": PROJECT_TYPE,
-        # REMOVED the root project_name here so DCM validation succeeds
-        "default_target": DEFAULT_TARGET,
-        "targets": targets,
-        "templating": {
-            "defaults": {
-                "project_owner_role": ADMIN_ROLE,
-                "warehouse": WAREHOUSE,
-            },
-            "configurations": configurations,
-        },
+    # 1. Build targets dictionary
+    targets[dcm_target] = {
+        "account_identifier": ACCOUNT_IDENTIFIER,
+        "project_name": project_name,
+        "project_owner": ADMIN_ROLE,
+        "templating_config": environment
     }
+    
+    # 2. Build configurations dictionary
+    configurations[environment] = {
+        "environment": environment,
+        "env_suffix": env_suffix,
+        "database": database,
+        "schemas": schemas,
+        "project_name": project_name,
+        "project_owner": ADMIN_ROLE,
+        "roles": mapped_roles,
+        "is_default_target": is_default
+    }
+
+if not default_target:
+    raise RuntimeError("No branch with is_default_target: true found in project_config.yml")
+
+# Assemble final manifest structure
+manifest = {
+    "manifest_version": 2,
+    "type": "DCM_PROJECT",
+    "default_target": default_target,
+    "targets": targets,
+    "templating": {
+        "defaults": {
+            "project_owner_role": ADMIN_ROLE,
+            "warehouse": WAREHOUSE
+        },
+        "configurations": configurations
+    }
+}
 
 # ============================================================
 # WRITE MANIFEST
 # ============================================================
-
-def write_manifest(manifest):
-
-    with MANIFEST_FILE.open("w", encoding="utf-8") as f:
-        yaml.dump(
-            manifest,
-            f,
-            Dumper=NoAliasDumper,
-            default_flow_style=False,
-            sort_keys=False,
-        )
-
-    return MANIFEST_FILE
-
-# ============================================================
-# MAIN
-# ============================================================
-
-def main():
-
-    manifest = build_manifest()
-    manifest_path = write_manifest(manifest)
-
+if MANIFEST_FILE:
+    with open(MANIFEST_FILE, "w", encoding="utf-8") as f:
+        # sort_keys=False preserves the order in which we built the dictionaries
+        yaml.dump(manifest, f, Dumper=NoAliasDumper, sort_keys=False, default_flow_style=False)
+        
     print("=" * 60)
     print("Manifest generated successfully.")
-    print(f"Output : {manifest_path}")
+    print(f"Output: {MANIFEST_FILE.resolve()}")
     print("=" * 60)
-
-
-if __name__ == "__main__":
-    main()
+else:
+    print("Error: MANIFEST_FILE path not resolved. Please check config directory structure.")

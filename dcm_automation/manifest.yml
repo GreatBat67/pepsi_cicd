@@ -4,29 +4,29 @@ default_target: DCM_METADATA
 targets:
   PEPSI_DCM_CICD:
     account_identifier: KIPI-KIPI_PRIMARY
-    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_CICD
     project_owner: PSEUDO_ACCOUNTADMIN
     templating_config: cicd
-  DCM_METADATA:
-    account_identifier: KIPI-KIPI_PRIMARY
-    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
-    project_owner: PSEUDO_ACCOUNTADMIN
-    templating_config: dcm_project
   PEPSI_DCM_DEV:
     account_identifier: KIPI-KIPI_PRIMARY
-    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DEV
     project_owner: PSEUDO_ACCOUNTADMIN
     templating_config: dev
-  PEPSI_DCM_MAIN:
-    account_identifier: KIPI-KIPI_PRIMARY
-    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
-    project_owner: PSEUDO_ACCOUNTADMIN
-    templating_config: main
   PEPSI_DCM_QA:
     account_identifier: KIPI-KIPI_PRIMARY
-    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_QA
     project_owner: PSEUDO_ACCOUNTADMIN
     templating_config: qa
+  PEPSI_DCM_MAIN:
+    account_identifier: KIPI-KIPI_PRIMARY
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_MAIN
+    project_owner: PSEUDO_ACCOUNTADMIN
+    templating_config: main
+  DCM_METADATA:
+    account_identifier: KIPI-KIPI_PRIMARY
+    project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DCM_PROJECT
+    project_owner: PSEUDO_ACCOUNTADMIN
+    templating_config: dcm_project
 templating:
   defaults:
     project_owner_role: PSEUDO_ACCOUNTADMIN
@@ -40,24 +40,12 @@ templating:
       - UTILITIES
       - PATIENTS
       - MANAGEMENT
-      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_CICD
       project_owner: PSEUDO_ACCOUNTADMIN
       roles:
-        DBA_ADMIN: DBA_ADMIN
-        DBA_FR: DBA_FR
+        DBA_ADMIN: DBA_ADMIN_CICD
+        DBA_FR: DBA_FR_CICD
       is_default_target: false
-    dcm_project:
-      environment: dcm_project
-      env_suffix: _dcm_project
-      database: CICD_METADATA
-      schemas:
-      - DCM_CONFIG
-      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
-      project_owner: PSEUDO_ACCOUNTADMIN
-      roles:
-        DBA_ADMIN: DBA_ADMIN
-        DBA_FR: DBA_FR
-      is_default_target: true
     dev:
       environment: dev
       env_suffix: _dev
@@ -66,25 +54,11 @@ templating:
       - UTILITIES
       - PATIENTS
       - MANAGEMENT
-      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DEV
       project_owner: PSEUDO_ACCOUNTADMIN
       roles:
-        DBA_ADMIN: DBA_ADMIN
-        DBA_FR: DBA_FR
-      is_default_target: false
-    main:
-      environment: main
-      env_suffix: _main
-      database: PEPSI_DEVOPS_DB_MAIN
-      schemas:
-      - UTILITIES
-      - PATIENTS
-      - MANAGEMENT
-      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
-      project_owner: PSEUDO_ACCOUNTADMIN
-      roles:
-        DBA_ADMIN: DBA_ADMIN
-        DBA_FR: DBA_FR
+        DBA_ADMIN: DBA_ADMIN_DEV
+        DBA_FR: DBA_FR_DEV
       is_default_target: false
     qa:
       environment: qa
@@ -94,9 +68,37 @@ templating:
       - UTILITIES
       - PATIENTS
       - MANAGEMENT
-      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_QA
+      project_owner: PSEUDO_ACCOUNTADMIN
+      roles:
+        DBA_ADMIN: DBA_ADMIN_QA
+        DBA_FR: DBA_FR_QA
+      is_default_target: false
+    main:
+      environment: main
+      env_suffix: _main
+      database: PEPSI_DEVOPS_DB_MAIN
+      schemas:
+      - UTILITIES
+      - PATIENTS
+      - MANAGEMENT
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_MAIN
+      project_owner: PSEUDO_ACCOUNTADMIN
+      roles:
+        DBA_ADMIN: DBA_ADMIN_MAIN
+        DBA_FR: DBA_FR_MAIN
+      is_default_target: false
+    dcm_project:
+      environment: dcm_project
+      env_suffix: _dcm_project
+      database: CICD_METADATA
+      schemas:
+      - UTILITIES
+      - PATIENTS
+      - MANAGEMENT
+      project_name: CICD_METADATA.DCM_CONFIG.DCM_AUTOMATION_DCM_PROJECT
       project_owner: PSEUDO_ACCOUNTADMIN
       roles:
         DBA_ADMIN: DBA_ADMIN
         DBA_FR: DBA_FR
-      is_default_target: false
+      is_default_target: true
