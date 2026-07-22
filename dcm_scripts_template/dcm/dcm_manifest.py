@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import sys
 import yaml
@@ -36,21 +35,35 @@ BRANCH_DATA = config.branch_data
 ACCOUNT_IDENTIFIER = config.account_identifier
 ADMIN_ROLE = config.admin_role
 WAREHOUSE = config.warehouse
-DCM_PROJECT_NAME = config.dcm_project_name.upper() if config.dcm_project_name else "DCM_AUTOMATION"
+if not config.dcm_project_name:
+    raise RuntimeError("dcm_project_name must be defined in project_config.yml")
+DCM_PROJECT_NAME = config.dcm_project_name.upper()
 
-metadata_db = "CICD_METADATA"
-metadata_schema = "DCM_CONFIG"
+# 1. Find the target configuration (the metadata hub)
+target_config = {}
+for branch, cfg_data in BRANCH_DATA.items():
+    if isinstance(cfg_data, dict) and cfg_data.get("is_default_target", False):
+        target_config = cfg_data
+        break
+
+if not target_config:
+    raise RuntimeError("No branch with is_default_target: true found in project_config.yml")
+
+# 2. Dynamically pull the database (e.g., CICD_METADATA)
+sf_databases = target_config.get("sf_databases", [])
+if not sf_databases:
+    raise RuntimeError("sf_databases must be defined for the metadata target in config.")
+metadata_db = sf_databases[0].upper()
+
+# 3. Dynamically pull the schema (falls back to DCM_CONFIG if not explicitly set in YAML)
+metadata_schema = target_config.get("dcm_schema", "DCM_CONFIG").upper()
 
 targets = {}
 configurations = {}
-default_target = "PEPSI_DCM_DEV" # Fallback
+default_target = None
 
 for branch_name, branch_cfg in BRANCH_DATA.items():
     if not isinstance(branch_cfg, dict):
-        continue
-    
-    # Skip the metadata dcm_project branch since it's just the storage hub
-    if branch_name == "dcm_project":
         continue
 
     dcm_target = branch_cfg.get("dcm_target")
@@ -76,8 +89,8 @@ for branch_name, branch_cfg in BRANCH_DATA.items():
                 
     # Admin role is referenced via project_owner_role in templates, no env-suffix mapping needed
     
-    # Set dev as the default target configuration
-    is_default = (environment == "dev")
+    # Use is_default_target flag from config to determine the default
+    is_default = branch_cfg.get("is_default_target", False)
     if is_default:
         default_target = dcm_target
 
@@ -100,6 +113,9 @@ for branch_name, branch_cfg in BRANCH_DATA.items():
         "roles": mapped_roles,
         "is_default_target": is_default
     }
+
+if not default_target:
+    raise RuntimeError("No branch with is_default_target: true found in project_config.yml")
 
 # Assemble final manifest structure
 manifest = {
