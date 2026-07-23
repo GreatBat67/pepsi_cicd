@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import sys
 
@@ -436,21 +435,6 @@ def generate_grants_macro():
         lines.append("{% endfor %}")
         lines.append("")
 
-    lines.append("-- Role hierarchy")
-    lines.append("{% set role_values = roles.values() | list %}")
-    lines.append("{% if role_values|length > 1 %}")
-    lines.append("{% for i in range(role_values|length - 1) %}")
-    lines.append(
-        "GRANT ROLE {{ role_values[i] }} TO ROLE {{ role_values[i + 1] }};"
-    )
-    lines.append("{% endfor %}")
-    lines.append("{% endif %}")
-
-    lines.append(
-        "GRANT ROLE {{ role_values[-1] }} TO ROLE {{ project_owner_role }};"
-    )
-
-    lines.append("")
     lines.append("{% endmacro %}")
 
     return "\n".join(lines)
